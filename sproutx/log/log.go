@@ -16,6 +16,8 @@ var (
 
 	sinksMu sync.RWMutex
 	sinks   []Sink
+
+	defaultOnce sync.Once
 )
 
 // Sink 是可插拔日志接收器。
@@ -282,7 +284,17 @@ func getLevel(level string) zapcore.Level {
 // L 返回全局 zap.Logger（未初始化时返回 Nop logger）。
 func L() *zap.Logger {
 	if defaultLogger == nil {
-		defaultLogger = zap.NewNop()
+		defaultOnce.Do(func() {
+			enabled := true
+			_ = Init(Config{
+				Level: "info",
+				Console: &ConsoleConfig{
+					Enabled:  &enabled,
+					Encoding: "console",
+					Output:   "stdout",
+				},
+			})
+		})
 	}
 	return defaultLogger
 }
@@ -290,7 +302,7 @@ func L() *zap.Logger {
 // S 返回全局 zap.SugaredLogger（未初始化时返回 Nop logger）。
 func S() *zap.SugaredLogger {
 	if sugarLogger == nil {
-		sugarLogger = zap.NewNop().Sugar()
+		sugarLogger = L().Sugar()
 	}
 	return sugarLogger
 }

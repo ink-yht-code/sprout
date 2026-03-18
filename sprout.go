@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/ink-yht-code/sprout/context"
 	"github.com/ink-yht-code/sprout/core"
 	"github.com/ink-yht-code/sprout/jwt"
@@ -162,23 +163,23 @@ func ServiceUnavailable() Result {
 	return core.ServiceUnavailable()
 }
 
-// W 将业务函数包装为 Handler（实际类型为 gin.HandlerFunc）。
-func W(fn func(ctx *context.Context) (Result, error)) interface{} {
+// W 将业务函数包装为 Handler（gin.HandlerFunc）。
+func W(fn func(ctx *context.Context) (Result, error)) gin.HandlerFunc {
 	return core.W(fn)
 }
 
 // B 将业务函数包装为 Handler，并自动绑定请求参数。
-func B[Req any](fn func(ctx *context.Context, req Req) (Result, error)) interface{} {
+func B[Req any](fn func(ctx *context.Context, req Req) (Result, error)) gin.HandlerFunc {
 	return core.B(fn)
 }
 
 // S 将业务函数包装为 Handler，并自动获取 Session。
-func S(fn func(ctx *context.Context, sess session.Session) (Result, error)) interface{} {
+func S(fn func(ctx *context.Context, sess session.Session) (Result, error)) gin.HandlerFunc {
 	return core.S(fn)
 }
 
 // BS 将业务函数包装为 Handler，同时支持参数绑定和 Session 获取。
-func BS[Req any](fn func(ctx *context.Context, req Req, sess session.Session) (Result, error)) interface{} {
+func BS[Req any](fn func(ctx *context.Context, req Req, sess session.Session) (Result, error)) gin.HandlerFunc {
 	return core.BS(fn)
 }
 

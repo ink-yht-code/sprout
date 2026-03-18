@@ -200,7 +200,7 @@ const goModTemplate = `module {{.ServiceName}}
  go 1.25.0
  
  require (
-	github.com/ink-yht-code/sprout v0.0.2
+	github.com/ink-yht-code/sprout v0.0.3
  )
 `
 

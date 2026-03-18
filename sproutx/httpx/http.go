@@ -40,6 +40,7 @@ func NewServer(cfg Config) *Server {
 
 // Run 启动 HTTP 服务（阻塞）。
 func (s *Server) Run() error {
+	log.Info("HTTP server starting", zap.String("addr", s.Server.Addr))
 	return s.Server.ListenAndServe()
 }
 
