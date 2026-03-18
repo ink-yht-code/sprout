@@ -60,6 +60,20 @@ type LogConfig struct {
 	Level    string ` + "`" + `yaml:"level"` + "`" + `
 	Encoding string ` + "`" + `yaml:"encoding"` + "`" + `
 	Output   string ` + "`" + `yaml:"output"` + "`" + `
+	Console  *LogConsoleConfig ` + "`" + `yaml:"console"` + "`" + `
+	File     *LogFileConfig    ` + "`" + `yaml:"file"` + "`" + `
+}
+
+type LogConsoleConfig struct {
+	Enabled  *bool  ` + "`" + `yaml:"enabled"` + "`" + `
+	Encoding string ` + "`" + `yaml:"encoding"` + "`" + `
+	Output   string ` + "`" + `yaml:"output"` + "`" + `
+}
+
+type LogFileConfig struct {
+	Enabled  *bool  ` + "`" + `yaml:"enabled"` + "`" + `
+	Path     string ` + "`" + `yaml:"path"` + "`" + `
+	Encoding string ` + "`" + `yaml:"encoding"` + "`" + `
 }
 
 type OutboxConfig struct {

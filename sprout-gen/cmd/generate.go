@@ -68,8 +68,8 @@ func generateSkeleton(name string, serviceID int, hasHTTP, hasRPC bool) error {
 		ServiceID:      serviceID,
 		HasHTTP:        hasHTTP,
 		HasRPC:         hasRPC,
-		SproutVersion:  "v1.0.0",
-		SproutxVersion: "v1.0.0",
+		SproutVersion:  "v0.0.2",
+		SproutxVersion: "v0.0.2",
 		GintVersion:    "v1.0.0",
 		GintxVersion:   "v1.0.0",
 	}

@@ -96,7 +96,6 @@ var (
 )
 
 // Context 是对 context.Context 的类型别名，便于 core 包复用增强 Context。
-type Context = context.Context
 
 // GetCodeMessage 获取业务码的默认中文提示。
 func GetCodeMessage(code int) string {

@@ -200,7 +200,7 @@ const goModTemplate = `module {{.ServiceName}}
  go 1.25.0
  
  require (
-	github.com/ink-yht-code/sprout v1.0.0
+	github.com/ink-yht-code/sprout v0.0.2
  )
 `
 
@@ -276,9 +276,32 @@ grpc:
   addr: ":9090"
 
 log:
+  # 日志级别: debug|info|warn|error
   level: "info"
+  # 旧版兼容配置: json|console
+  # - output 为 stdout/stderr 时：按 encoding 输出到终端
+  # - output 为文件路径时：默认启用 "终端 console + 文件 json" 的双输出
   encoding: "json"
+  # 旧版兼容配置: stdout|stderr|文件路径
   output: "stdout"
+
+  # 推荐：分别配置终端与文件输出（更直观）
+  # - 终端输出用 console（可读）
+  # - 文件输出用 json（便于采集入库）
+  console:
+    # 是否启用终端输出
+    enabled: true
+    # console|json
+    encoding: "console"
+    # stdout|stderr
+    output: "stdout"
+  file:
+    # 是否启用文件输出
+    enabled: false
+    # 日志文件路径
+    path: "logs/app.log"
+    # 建议保持 json，便于结构化采集
+    encoding: "json"
 
 db:
   dsn: ""
@@ -380,6 +403,20 @@ type LogConfig struct {
 	Level    string ` + "`" + `yaml:"level"` + "`" + `
 	Encoding string ` + "`" + `yaml:"encoding"` + "`" + `
 	Output   string ` + "`" + `yaml:"output"` + "`" + `
+	Console  *LogConsoleConfig ` + "`" + `yaml:"console"` + "`" + `
+	File     *LogFileConfig    ` + "`" + `yaml:"file"` + "`" + `
+}
+
+type LogConsoleConfig struct {
+	Enabled  *bool  ` + "`" + `yaml:"enabled"` + "`" + `
+	Encoding string ` + "`" + `yaml:"encoding"` + "`" + `
+	Output   string ` + "`" + `yaml:"output"` + "`" + `
+}
+
+type LogFileConfig struct {
+	Enabled  *bool  ` + "`" + `yaml:"enabled"` + "`" + `
+	Path     string ` + "`" + `yaml:"path"` + "`" + `
+	Encoding string ` + "`" + `yaml:"encoding"` + "`" + `
 }
 
 type DBConfig struct {
