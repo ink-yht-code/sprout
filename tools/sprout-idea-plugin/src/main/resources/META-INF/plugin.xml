@@ -1,0 +1,43 @@
+<idea-plugin>
+    <id>com.ink.yht.sprout.idea</id>
+    <name>Sprout Language Support</name>
+    <vendor email="ink-yht" url="https://github.com/ink-yht-code/sprout">ink-yht</vendor>
+
+    <description><![CDATA[
+    Provides support for .sprout files in GoLand:
+    <ul>
+        <li>Syntax highlighting</li>
+        <li>Basic syntax validation</li>
+        <li>Code completion for keywords, types, and HTTP methods</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Language -->
+        <fileType name="Sprout" language="Sprout" extensions="sprout"
+                  implementationClass="com.ink.yht.sprout.idea.lang.SproutFileType"/>
+
+        <!-- Lexer and Highlighting -->
+        <lang.syntaxHighlighterFactory language="Sprout"
+                                       implementationClass="com.ink.yht.sprout.idea.highlight.SproutSyntaxHighlighterFactory"/>
+        <lang.parserDefinition language="Sprout"
+                               implementationClass="com.ink.yht.sprout.idea.lang.SproutParserDefinition"/>
+
+        <!-- Formatter -->
+        <lang.formatter language="Sprout"
+                        implementationClass="com.ink.yht.sprout.idea.formatting.SproutFormattingModelBuilder"/>
+
+        <!-- Annotator -->
+        <annotator language="Sprout"
+                   implementationClass="com.ink.yht.sprout.idea.annotator.SproutAnnotator"/>
+
+        <!-- Completion -->
+        <completion.contributor language="Sprout"
+                                implementationClass="com.ink.yht.sprout.idea.completion.SproutCompletionContributor"/>
+
+        <!-- Color Settings -->
+        <colorSettingsPage implementationClass="com.ink.yht.sprout.idea.highlight.SproutColorSettingsPage"/>
+    </extensions>
+</idea-plugin>

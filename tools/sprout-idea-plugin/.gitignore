@@ -1,0 +1,32 @@
+# Build outputs
+/build/
+/.gradle/
+/out/
+
+# Caches / local state
+/caches/
+/.kotlin/
+/kotlin-profile/
+/jdks/
+/daemon/
+/.tmp/
+/wrapper/
+
+# IDE
+/.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Package files
+*.zip
+*.jar
+
+# Logs
+buildlog.txt
+runide_log.txt
+runide_full.txt
