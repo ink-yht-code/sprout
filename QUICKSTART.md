@@ -10,17 +10,16 @@
 
 ## 安装
 
-### 1. 安装 sprout 和 sproutx
+### 1. 安装 sprout（包含 sproutx）
 
 ```bash
 go get github.com/ink-yht-code/sprout
-go get github.com/ink-yht-code/sproutx
 ```
 
 ### 2. 安装 sprout-gen
 
 ```bash
-go install github.com/ink-yht-code/sprout-gen@latest
+go install github.com/ink-yht-code/sprout/sprout-gen@latest
 ```
 
 ### 3. 启动 sprout-registry（可选）
@@ -38,10 +37,13 @@ Registry 默认监听在 `:18080`。
 
 ```bash
 # 创建一个名为 user 的 HTTP 服务
-sprout-gen new service user --transport http
+sprout-gen new service user --transport http --module github.com/your-org/your-repo/user
 
 # 进入服务目录
 cd user
+
+go mod tidy
+go test ./...
 ```
 
 这会创建以下目录结构：
@@ -194,7 +196,7 @@ redis:
 ### 步骤 6：运行服务
 
 ```bash
-go run cmd/main.go
+go run ./cmd
 ```
 
 服务启动后，你可以访问：

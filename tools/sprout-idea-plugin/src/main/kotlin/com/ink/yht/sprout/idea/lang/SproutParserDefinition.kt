@@ -13,6 +13,7 @@ import com.intellij.psi.tree.TokenSet
 class SproutParserDefinition : ParserDefinition {
     companion object {
         val FILE = IFileElementType(SproutLanguage)
+        val WHITESPACES = TokenSet.create(SproutTokenTypes.WHITESPACE)
         val COMMENTS = TokenSet.create(SproutTokenTypes.COMMENT)
         val STRINGS = TokenSet.create(SproutTokenTypes.STRING, SproutTokenTypes.RAW_STRING)
     }
@@ -20,6 +21,7 @@ class SproutParserDefinition : ParserDefinition {
     override fun createLexer(project: Project?): Lexer = SproutLexerAdapter()
     override fun createParser(project: Project?): PsiParser = SproutParser()
     override fun getFileNodeType() = FILE
+    override fun getWhitespaceTokens() = WHITESPACES
     override fun getCommentTokens() = COMMENTS
     override fun getStringLiteralElements() = STRINGS
     override fun createElement(node: ASTNode) = SproutTokenTypes.Factory.createElement(node)

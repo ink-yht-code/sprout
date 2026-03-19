@@ -43,17 +43,22 @@ Sprout 整合了四个核心模块，提供完整的微服务开发体验：
 
 ## 📦 安装
 
-### 安装 sprout 和 sproutx
+### 安装 sprout（包含 sproutx）
 
 ```bash
 go get github.com/ink-yht-code/sprout
-go get github.com/ink-yht-code/sproutx
 ```
 
 ### 安装 sprout-gen
 
 ```bash
-go install github.com/ink-yht-code/sprout-gen@latest
+go install github.com/ink-yht-code/sprout/sprout-gen@latest
+```
+
+或在仓库根目录直接运行：
+
+```bash
+go run ./sprout-gen --help
 ```
 
 ### 运行 sprout-registry
@@ -69,10 +74,13 @@ go run cmd/main.go
 
 ```bash
 # 创建 HTTP 服务
-sprout-gen new service user --transport http
+sprout-gen new service user --transport http --module github.com/your-org/your-repo/user
 
 # 进入服务目录
 cd user
+
+go mod tidy
+go test ./...
 ```
 
 ### 2. 编辑 API 定义
@@ -121,7 +129,7 @@ package web
 import (
     "github.com/ink-yht-code/sprout"
     "github.com/ink-yht-code/sprout/context"
-    "github.com/your-project/user-service/internal/types"
+    "github.com/your-org/your-repo/user/internal/types"
 )
 
 func (h *Handler) CreateUser(ctx *context.Context, req *types.CreateUserReq) (sprout.Result, error) {
@@ -136,7 +144,7 @@ func (h *Handler) CreateUser(ctx *context.Context, req *types.CreateUserReq) (sp
 ### 5. 运行服务
 
 ```bash
-go run cmd/main.go
+go run ./cmd
 ```
 
 ## 📚 文档

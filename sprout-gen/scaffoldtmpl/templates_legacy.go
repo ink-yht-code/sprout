@@ -10,7 +10,7 @@ go 1.25
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/ink-yht-code/sprout {{.SproutVersion}}
-	github.com/ink-yht-code/sproutx {{.SproutxVersion}}
+	github.com/ink-yht-code/sprout/sproutx {{.SproutxVersion}}
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12
 	gopkg.in/yaml.v3 v3.0.1

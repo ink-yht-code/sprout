@@ -24,6 +24,7 @@ func NewNewCommand() *cobra.Command {
 		daoFlag       string
 		cacheFlag     string
 		registryFlag  string
+		moduleFlag    string
 	)
 
 	cmd := &cobra.Command{
@@ -33,7 +34,7 @@ func NewNewCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			serviceName := args[1]
-			if err := createService(serviceName, transportFlag, daoFlag, cacheFlag, registryFlag); err != nil {
+			if err := createService(serviceName, transportFlag, daoFlag, cacheFlag, registryFlag, moduleFlag); err != nil {
 				color.Red("创建服务失败: %v", err)
 				os.Exit(1)
 			}
@@ -49,10 +50,11 @@ func NewNewCommand() *cobra.Command {
 	cmd.Flags().StringVar(&daoFlag, "dao", "gorm", "DAO 类型")
 	cmd.Flags().StringVar(&cacheFlag, "cache", "redis", "Cache 类型")
 	cmd.Flags().StringVarP(&registryFlag, "registry", "r", "http://localhost:18080", "Registry 服务地址")
+	cmd.Flags().StringVar(&moduleFlag, "module", "", "Go module path（例如 github.com/xxx/project/service）；为空则使用服务名")
 	return cmd
 }
 
-func createService(serviceName string, transport string, dao string, cache string, registryAddr string) error {
+func createService(serviceName string, transport string, dao string, cache string, registryAddr string, modulePath string) error {
 	serviceDir := serviceName
 	if _, err := os.Stat(serviceDir); !os.IsNotExist(err) {
 		return fmt.Errorf("目录 %s 已存在", serviceDir)
@@ -108,8 +110,12 @@ func createService(serviceName string, transport string, dao string, cache strin
 		"internal/wiring/wiring.go":          wiringTemplate,
 	}
 
+	if strings.TrimSpace(modulePath) == "" {
+		modulePath = serviceName
+	}
+
 	for path, tmpl := range files {
-		if err := createFileFromTemplate(serviceDir, path, tmpl, serviceName, serviceID, transport); err != nil {
+		if err := createFileFromTemplate(serviceDir, path, tmpl, serviceName, modulePath, serviceID, transport); err != nil {
 			return fmt.Errorf("创建文件 %s 失败: %w", path, err)
 		}
 	}
@@ -119,7 +125,7 @@ func createService(serviceName string, transport string, dao string, cache strin
 	return nil
 }
 
-func createFileFromTemplate(baseDir, path, tmpl string, serviceName string, serviceID int, transport string) error {
+func createFileFromTemplate(baseDir, path, tmpl string, serviceName string, modulePath string, serviceID int, transport string) error {
 	fullPath := filepath.Join(baseDir, path)
 
 	t, err := template.New(path).Parse(tmpl)
@@ -130,10 +136,12 @@ func createFileFromTemplate(baseDir, path, tmpl string, serviceName string, serv
 	var buf bytes.Buffer
 	data := struct {
 		ServiceName string
+		ModuleName  string
 		ServiceID   int
 		Transport   string
 	}{
 		ServiceName: serviceName,
+		ModuleName:  modulePath,
 		ServiceID:   serviceID,
 		Transport:   transport,
 	}
@@ -195,14 +203,18 @@ func allocateServiceID(registryAddr string, serviceName string) (int, error) {
 	return out.ServiceID, nil
 }
 
-const goModTemplate = `module {{.ServiceName}}
+var goModTemplate = ""
+
+func init() {
+	goModTemplate = fmt.Sprintf(`module {{.ModuleName}}
  
  go 1.25.0
  
  require (
-	github.com/ink-yht-code/sprout v0.0.3
+	github.com/ink-yht-code/sprout %s
  )
-`
+`, SproutVersion)
+}
 
 const sproutTemplate = `syntax = "v1"
 
@@ -325,9 +337,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ink-yht-code/{{.ServiceName}}/internal/config"
-	"github.com/ink-yht-code/{{.ServiceName}}/internal/wiring"
-	"github.com/ink-yht-code/sproutx"
+	"{{.ModuleName}}/internal/config"
+	"{{.ModuleName}}/internal/wiring"
+	"github.com/ink-yht-code/sprout/sproutx"
 	"go.uber.org/zap"
 )
 
@@ -460,7 +472,7 @@ const repositoryPortTemplate = `package port
 import (
 	"context"
 
-	"{{.ServiceName}}/internal/domain/entity"
+	"{{.ModuleName}}/internal/domain/entity"
 )
 
 type ExampleRepository interface {
@@ -521,9 +533,9 @@ const serviceTemplate = `package service
 import (
 	"context"
 
-	"{{.ServiceName}}/internal/domain/entity"
-	"{{.ServiceName}}/internal/domain/errs"
-	"{{.ServiceName}}/internal/domain/port"
+	"{{.ModuleName}}/internal/domain/entity"
+	"{{.ModuleName}}/internal/domain/errs"
+	"{{.ModuleName}}/internal/domain/port"
 )
 
 type ExampleService interface {
@@ -560,7 +572,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ink-yht-code/{{.ServiceName}}/internal/service"
+	"{{.ModuleName}}/internal/service"
 	"github.com/ink-yht-code/sprout"
 )
 
@@ -594,9 +606,9 @@ const wiringTemplate = `package wiring
 import (
 	"context"
 
-	"github.com/ink-yht-code/{{.ServiceName}}/internal/config"
-	"github.com/ink-yht-code/{{.ServiceName}}/internal/service"
-	"github.com/ink-yht-code/{{.ServiceName}}/internal/web"
+	"{{.ModuleName}}/internal/config"
+	"{{.ModuleName}}/internal/service"
+	"{{.ModuleName}}/internal/web"
 	"github.com/ink-yht-code/sprout/sproutx"
 	"gorm.io/gorm"
 )

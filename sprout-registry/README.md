@@ -307,7 +307,7 @@ var (
 cd sprout-registry && go run cmd/main.go
 
 # 创建服务（自动分配 ServiceID）
-sprout gen generate user --registry http://localhost:18080
+sprout-gen generate user --registry http://localhost:18080
 ```
 
 生成的 `configs/user.yaml`：
@@ -323,7 +323,7 @@ service:
 也可以手动指定 ServiceID：
 
 ```bash
-sprout gen generate user --service-id 101
+sprout-gen generate user --service-id 101
 ```
 
 ## 部署建议

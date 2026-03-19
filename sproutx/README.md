@@ -40,7 +40,7 @@ sproutx 提供微服务运行时基础设施组件，包括日志、数据库、
 ## 安装
 
 ```bash
-go get github.com/ink-yht-code/sproutx
+go get github.com/ink-yht-code/sprout
 ```
 
 ## 快速开始
@@ -49,17 +49,16 @@ go get github.com/ink-yht-code/sproutx
 package main
 
 import (
-    "github.com/ink-yht-code/sproutx"
-    "github.com/ink-yht-code/sproutx/app"
+    "github.com/ink-yht-code/sprout/sproutx"
 )
 
 func main() {
-    application, err := app.NewApp(&app.Config{
-        Service: app.ServiceConfig{ID: 101, Name: "user"},
-        HTTP:    app.HTTPConfig{Enabled: true, Addr: ":8080"},
-        Log:     app.LogConfig{Level: "info", Encoding: "json"},
-        DB:      app.DBConfig{DSN: "user:pass@tcp(127.0.0.1:3306)/user_db"},
-        Redis:   app.RedisConfig{Addr: "127.0.0.1:6379"},
+    application, err := sproutx.NewApp(&sproutx.Config{
+        Service: sproutx.ServiceConfig{ID: 101, Name: "user"},
+        HTTP:    sproutx.HTTPConfig{Enabled: true, Addr: ":8080"},
+        Log:     sproutx.LogConfig{Level: "info", Encoding: "json"},
+        DB:      sproutx.DBConfig{DSN: "user:pass@tcp(127.0.0.1:3306)/user_db"},
+        Redis:   sproutx.RedisConfig{Addr: "127.0.0.1:6379"},
     })
     if err != nil {
         panic(err)
@@ -79,33 +78,33 @@ func main() {
 #### 创建应用
 
 ```go
-import "github.com/ink-yht-code/sproutx/app"
+import "github.com/ink-yht-code/sprout/sproutx"
 
-application, err := app.NewApp(&app.Config{
-    Service: app.ServiceConfig{
+application, err := sproutx.NewApp(&sproutx.Config{
+    Service: sproutx.ServiceConfig{
         ID:   101,
         Name: "user",
     },
-    HTTP: app.HTTPConfig{
+    HTTP: sproutx.HTTPConfig{
         Enabled: true,
         Addr:    ":8080",
     },
-    RPC: app.RPCConfig{
+    GRPC: sproutx.GRPCConfig{
         Enabled: true,
         Addr:    ":9090",
     },
-    Log: app.LogConfig{
+    Log: sproutx.LogConfig{
         Level:    "info",
         Encoding: "json",
         Output:   "stdout",
     },
-    DB: app.DBConfig{
+    DB: sproutx.DBConfig{
         DSN:      "user:pass@tcp(127.0.0.1:3306)/user_db",
         MaxOpen:  100,
         MaxIdle:  10,
         LogLevel: "info",
     },
-    Redis: app.RedisConfig{
+    Redis: sproutx.RedisConfig{
         Addr:     "127.0.0.1:6379",
         Password: "",
         DB:       0,
@@ -147,7 +146,7 @@ application.RegisterInit(func(app *app.App) error {
 #### 初始化
 
 ```go
-import "github.com/ink-yht-code/sproutx/log"
+import "github.com/ink-yht-code/sprout/sproutx/log"
 
 err := log.Init(log.Config{
     Level:    "info",     // debug, info, warn, error
@@ -226,7 +225,7 @@ GORM 数据库初始化，支持连接池和日志配置。
 #### 初始化
 
 ```go
-import "github.com/ink-yht-code/sproutx/db"
+import "github.com/ink-yht-code/sprout/sproutx/db"
 
 database, err := db.New(db.Config{
     DSN:      "user:pass@tcp(127.0.0.1:3306)/mydb?charset=utf8mb4&parseTime=True&loc=Local",
@@ -277,7 +276,7 @@ Redis 客户端初始化，基于 go-redis/v9。
 #### 初始化
 
 ```go
-import "github.com/ink-yht-code/sproutx/redis"
+import "github.com/ink-yht-code/sprout/sproutx/redis"
 
 client, err := redis.New(redis.Config{
     Addr:         "127.0.0.1:6379",
@@ -336,7 +335,7 @@ locked, err := client.SetNX(ctx, "lock:key", "1", time.Second*30).Result()
 #### 创建事务管理器
 
 ```go
-import "github.com/ink-yht-code/sproutx/tx"
+import "github.com/ink-yht-code/sprout/sproutx/tx"
 
 txMgr := tx.NewTxManager(db)
 ```
@@ -404,7 +403,7 @@ err := txMgr.Do(ctx, func(ctx context.Context) error {
 #### 创建服务器
 
 ```go
-import "github.com/ink-yht-code/sproutx/httpx"
+import "github.com/ink-yht-code/sprout/sproutx/httpx"
 
 server, err := httpx.NewServer(httpx.Config{
     Enabled: true,
@@ -483,7 +482,7 @@ gRPC 服务器，内置拦截器和优雅关闭。
 #### 创建服务器
 
 ```go
-import "github.com/ink-yht-code/sproutx/rpc"
+import "github.com/ink-yht-code/sprout/sproutx/rpc"
 
 server, err := rpc.NewServer(rpc.Config{
     Enabled: true,
@@ -541,7 +540,7 @@ server.AddUnaryInterceptor(otel.UnaryServerInterceptor())
 #### HTTP 健康检查
 
 ```go
-import "github.com/ink-yht-code/sproutx/health"
+import "github.com/ink-yht-code/sprout/sproutx/health"
 
 checker := health.NewChecker()
 
@@ -592,7 +591,7 @@ Outbox 模式，保证数据库事务和消息发送的一致性。
 #### 创建 Outbox
 
 ```go
-import "github.com/ink-yht-code/sproutx/outbox"
+import "github.com/ink-yht-code/sprout/sproutx/outbox"
 
 outboxStore := outbox.NewStore(db)
 producer := outbox.NewProducer(outboxStore, kafkaProducer)
