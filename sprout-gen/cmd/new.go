@@ -72,6 +72,7 @@ func createService(serviceName string, transport string, dao string, cache strin
 		"internal/domain/port",
 		"internal/domain/errs",
 		"internal/domain/event",
+		"internal/repository",
 		"internal/repository/dao",
 		"internal/service",
 		"internal/types",
@@ -102,6 +103,8 @@ func createService(serviceName string, transport string, dao string, cache strin
 		"internal/config/config.go":          configStructTemplate,
 		"internal/domain/entity/entity.go":   entityTemplate,
 		"internal/domain/port/repository.go": repositoryPortTemplate,
+		"internal/repository/dao/model.go":   daoModelTemplate,
+		"internal/repository/repository.go":  repositoryTemplate,
 		"internal/domain/errs/codes.go":      codesTemplate,
 		"internal/domain/errs/error.go":      errorTemplate,
 		"internal/service/service.go":        serviceTemplate,
@@ -135,15 +138,17 @@ func createFileFromTemplate(baseDir, path, tmpl string, serviceName string, modu
 
 	var buf bytes.Buffer
 	data := struct {
-		ServiceName string
-		ModuleName  string
-		ServiceID   int
-		Transport   string
+		ServiceName      string
+		ServiceNameUpper string
+		ModuleName       string
+		ServiceID        int
+		Transport        string
 	}{
-		ServiceName: serviceName,
-		ModuleName:  modulePath,
-		ServiceID:   serviceID,
-		Transport:   transport,
+		ServiceName:      serviceName,
+		ServiceNameUpper: title(serviceName),
+		ModuleName:       modulePath,
+		ServiceID:        serviceID,
+		Transport:        transport,
 	}
 
 	if err := t.Execute(&buf, data); err != nil {
@@ -461,9 +466,98 @@ func LoadConfig(path string) (*Config, error) {
 
 const entityTemplate = `package entity
 
-type Example struct {
-	ID   int64  ` + "`" + `json:"id"` + "`" + `
+type {{.ServiceNameUpper}} struct {
+	ID   string ` + "`" + `json:"id"` + "`" + `
 	Name string ` + "`" + `json:"name"` + "`" + `
+}
+`
+
+const daoModelTemplate = `package dao
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+// ExampleDAO 持久化模型（PO/DAO）
+// 仅用于数据库映射，不要承载领域逻辑
+type {{.ServiceNameUpper}}DAO struct {
+	ID        string         ` + "`" + `gorm:"primaryKey;comment:示例数据唯一标识"` + "`" + `
+	CreatedAt time.Time      ` + "`" + `gorm:"comment:创建时间"` + "`" + `
+	UpdatedAt time.Time      ` + "`" + `gorm:"comment:更新时间"` + "`" + `
+	DeletedAt gorm.DeletedAt ` + "`" + `gorm:"index;comment:软删除时间"` + "`" + `
+	Name      string         ` + "`" + `gorm:"type:varchar(256);not null;comment:名称"` + "`" + `
+}
+
+func ({{.ServiceNameUpper}}DAO) TableName() string {
+	return "examples"
+}
+`
+
+const repositoryTemplate = `package repository
+
+import (
+	"context"
+	"errors"
+
+	"{{.ModuleName}}/internal/domain/entity"
+	"{{.ModuleName}}/internal/domain/port"
+	"{{.ModuleName}}/internal/repository/dao"
+	"gorm.io/gorm"
+)
+
+type exampleRepository struct {
+	db *gorm.DB
+}
+
+func New{{.ServiceNameUpper}}Repository(db *gorm.DB) port.{{.ServiceNameUpper}}Repository {
+	return &exampleRepository{db: db}
+}
+
+func (r *exampleRepository) Create(ctx context.Context, ex *entity.{{.ServiceNameUpper}}) error {
+	if r.db == nil {
+		return errors.New("db is nil")
+	}
+	if ex == nil {
+		return errors.New("entity is nil")
+	}
+
+	m := toDAO(ex)
+	return r.db.WithContext(ctx).Create(&m).Error
+}
+
+func (r *exampleRepository) GetByID(ctx context.Context, id string) (*entity.{{.ServiceNameUpper}}, error) {
+	if r.db == nil {
+		return nil, errors.New("db is nil")
+	}
+
+	var m dao.{{.ServiceNameUpper}}DAO
+	err := r.db.WithContext(ctx).First(&m, "id = ?", id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return fromDAO(&m), nil
+}
+
+func toDAO(ex *entity.{{.ServiceNameUpper}}) dao.{{.ServiceNameUpper}}DAO {
+	return dao.{{.ServiceNameUpper}}DAO{
+		ID:   ex.ID,
+		Name: ex.Name,
+	}
+}
+
+func fromDAO(m *dao.{{.ServiceNameUpper}}DAO) *entity.{{.ServiceNameUpper}} {
+	if m == nil {
+		return nil
+	}
+	return &entity.{{.ServiceNameUpper}}{
+		ID:   m.ID,
+		Name: m.Name,
+	}
 }
 `
 
@@ -475,9 +569,9 @@ import (
 	"{{.ModuleName}}/internal/domain/entity"
 )
 
-type ExampleRepository interface {
-	Create(ctx context.Context, ex *entity.Example) error
-	GetByID(ctx context.Context, id int64) (*entity.Example, error)
+type {{.ServiceNameUpper}}Repository interface {
+	Create(ctx context.Context, ex *entity.{{.ServiceNameUpper}}) error
+	GetByID(ctx context.Context, id string) (*entity.{{.ServiceNameUpper}}, error)
 }
 `
 
@@ -533,20 +627,18 @@ const serviceTemplate = `package service
 import (
 	"context"
 
-	"{{.ModuleName}}/internal/domain/entity"
-	"{{.ModuleName}}/internal/domain/errs"
 	"{{.ModuleName}}/internal/domain/port"
 )
 
-type ExampleService interface {
+type {{.ServiceNameUpper}}Service interface {
 	Ping(ctx context.Context) (string, error)
 }
 
 type exampleService struct {
-	repo port.ExampleRepository
+	repo port.{{.ServiceNameUpper}}Repository
 }
 
-func NewExampleService(repo port.ExampleRepository) ExampleService {
+func New{{.ServiceNameUpper}}Service(repo port.{{.ServiceNameUpper}}Repository) {{.ServiceNameUpper}}Service {
 	return &exampleService{repo: repo}
 }
 
@@ -577,11 +669,11 @@ import (
 )
 
 type Handler struct {
-	exampleSvc service.ExampleService
+	svc service.{{.ServiceNameUpper}}Service
 }
 
-func NewHandler(exampleSvc service.ExampleService) *Handler {
-	return &Handler{exampleSvc: exampleSvc}
+func NewHandler(svc service.{{.ServiceNameUpper}}Service) *Handler {
+	return &Handler{svc: svc}
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
@@ -592,7 +684,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 }
 
 func (h *Handler) Ping(ctx *sprout.Context) (sprout.Result, error) {
-	msg, err := h.exampleSvc.Ping(ctx)
+	msg, err := h.svc.Ping(ctx)
 	if err != nil {
 		_ = http.StatusInternalServerError
 		return sprout.InternalError(), err
@@ -607,6 +699,7 @@ import (
 	"context"
 
 	"{{.ModuleName}}/internal/config"
+	"{{.ModuleName}}/internal/repository"
 	"{{.ModuleName}}/internal/service"
 	"{{.ModuleName}}/internal/web"
 	"github.com/ink-yht-code/sprout/sproutx"
@@ -640,8 +733,9 @@ func InitApp(cfg *config.Config) (*App, error) {
 			Addr:    cfg.HTTP.Addr,
 		})
 
-		exampleSvc := service.NewExampleService(nil)
-		handler := web.NewHandler(exampleSvc)
+		repo := repository.New{{.ServiceNameUpper}}Repository(app.DB)
+		svc := service.New{{.ServiceNameUpper}}Service(repo)
+		handler := web.NewHandler(svc)
 
 		handler.RegisterRoutes(server.Engine)
 
